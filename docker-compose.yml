@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  balaboba-bot:
+    build:
+      context: ./
+      args:
+        BIN: 'balaboba-bot'
+    image: kraftwerk28/balaboba-bot
+    env_file: .env.prod
+    environment:
+      GO_ENV: production
+    command: ["./balaboba-bot"]
+    restart: always
