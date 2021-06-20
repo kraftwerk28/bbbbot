@@ -62,10 +62,14 @@ func (bbClient *BbClient) Run(query string) (*BbResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println(response.Status)
 
 	defer response.Body.Close()
 	var bbResponse BbResponse
 	err = json.NewDecoder(response.Body).Decode(&bbResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("\"%s\" -> Status: %s\n", query, response.Status)
 	return &bbResponse, nil
 }
