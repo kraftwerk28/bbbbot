@@ -3,14 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
-	"time"
 
 	"github.com/joho/godotenv"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 var isDev = envPanic("GO_ENV") == "development"
+var startPayloadRegex = regexp.MustCompile(`^\/start(?:\s+(.+))?$`)
 
 func setupBot() (*tb.Bot, error) {
 	var poller tb.Poller
@@ -24,6 +25,11 @@ func setupBot() (*tb.Bot, error) {
 		Token:  envPanic("BOT_TOKEN"),
 		Poller: poller,
 	})
+}
+
+func getStartPayload(m *tb.Message) string {
+	matchArr := startPayloadRegex.FindStringSubmatch(m.Text)
+	return matchArr[1]
 }
 
 func main() {
@@ -40,19 +46,26 @@ func main() {
 		if m.Chat.Type != tb.ChatPrivate {
 			return
 		}
-		sent, err := bot.Send(
+
+		startPayload := getStartPayload(m)
+		if startPayload != "" {
+			logStr := fmt.Sprintf("User %d", m.Sender.ID)
+			if m.Sender.Username != "" {
+				logStr += fmt.Sprintf(" (@%s)", m.Sender.Username)
+			}
+			logStr += " clicked PM switch button."
+			log.Println(logStr)
+		}
+
+		_, err := bot.Send(
 			m.Sender,
-			"<u>I guess I'm alive...</u>",
+			"<b>Hello!</b> I was made by @kraftwerk28",
 			&tb.SendOptions{ReplyTo: m, ParseMode: tb.ModeHTML},
 		)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		go func(m *tb.Message) {
-			time.Sleep(time.Second * 5)
-			bot.Delete(m) // Ignore error
-		}(sent)
 	})
 
 	emptyAnswer := func(q *tb.Query) error {
